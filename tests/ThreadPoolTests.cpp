@@ -1,14 +1,27 @@
-#include "ThreadPoolTests.hpp"
+#include <gtest/gtest.h>
 
-extern "C"{
-  #include <unistd.h>
-  #include <stdio.h>
-}
+#include "Task1.hpp"
+#include <ThreadPool/ThreadPool.hpp>
 
-QTEST_MAIN(ThreadPoolTests)
+#define NB_THREAD 4
 
-void ThreadPoolTests::dynamicAllocation()
-{
+using namespace TP;
+
+/*
+  Tests ThreadPool with dynamic and static allocation.
+
+  1.  We create 8 Task for a thread pool of 4. 
+      Each task wait 400 ms.
+      We test thread loading and the waiting queue with 8 tasks.
+     
+  2.  We wait until all the tasks have finished to test the main loop.
+     
+  3.  When it's finish we reload 6 tasks to test thread loading and 
+      the waiting queue
+*/
+
+TEST(ThreadPoolTests, dynamicAllocation){
+
   ThreadPool<NB_THREAD> *threadPool = new ThreadPool<NB_THREAD>();
 
   Task1 task1(0,2);
@@ -27,7 +40,8 @@ void ThreadPoolTests::dynamicAllocation()
   threadPool->addThread(task6);
   threadPool->addThread(task7);
 
-  sleep(15);
+  while (threadPool->nbRunningThread() > 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   Task1 task8(7,2);
   Task1 task9(8,2);
@@ -43,13 +57,12 @@ void ThreadPoolTests::dynamicAllocation()
   threadPool->addThread(task12);
   threadPool->addThread(task13);
 
-  while (threadPool->nbRunningThread() > 0){
-    sleep(1);
-  }
+  while (threadPool->nbRunningThread() > 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 }
 
-void ThreadPoolTests::staticAllocation()
-{
+TEST(ThreadPoolTests, staticAllocation){
+
   ThreadPool<NB_THREAD> threadPool;
 
   Task1 task1(0,2);
@@ -68,7 +81,8 @@ void ThreadPoolTests::staticAllocation()
   threadPool.addThread(task6);
   threadPool.addThread(task7);
 
-  sleep(15);
+  while (threadPool.nbRunningThread() > 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   Task1 task8(7,2);
   Task1 task9(8,2);
@@ -84,7 +98,11 @@ void ThreadPoolTests::staticAllocation()
   threadPool.addThread(task12);
   threadPool.addThread(task13);
 
-  while (threadPool.nbRunningThread() > 0){
-    sleep(1);
-  }
+  while (threadPool.nbRunningThread() > 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+}
+
+int main(int argc, char **argv){
+  testing::InitGoogleTest(&argc, argv);
+  return RUN_ALL_TESTS();
 }

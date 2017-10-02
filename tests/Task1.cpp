@@ -1,9 +1,7 @@
 #include "Task1.hpp"
 
-extern "C"{
-  #include <unistd.h>
-  #include <stdio.h>
-}
+#include <thread>
+#include <chrono>
 
 Task1::Task1(int id, int maxLoop)
  : m_id(id)
@@ -26,7 +24,7 @@ bool Task1::executeTask()
   int localCounter = 0;
   while(localCounter < m_maxLoop){
     localCounter++;
-    sleep(2);
+    std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
   return true;
 }

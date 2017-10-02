@@ -2,13 +2,16 @@ if(ENABLE_TESTING)
 
   MESSAGE("-- [Threadpool] - Compile tests")
 
-   # QT
-  find_package(Qt4 4.6.0 COMPONENTS QtCore QtTest REQUIRED)
-  include(${QT_USE_FILE})
+  SET(Sources
+  ThreadPoolTests.cpp
+  Task1.cpp
+  )
 
-  unset( MOC_SOURCES)
-  qt4_wrap_cpp( MOC_SOURCES ThreadPoolTests.hpp)
-  add_executable( ThreadPoolTests ThreadPoolTests.cpp Task1.cpp ${MOC_SOURCES})
-  target_link_libraries( ThreadPoolTests ${QT_LIBRARIES})
+   # gtest
+  find_package(GTest REQUIRED)
+  include_directories(${GTEST_INCLUDE_DIRS})
+
+  add_executable(ThreadPoolTests ${Sources})
+  target_link_libraries(ThreadPoolTests ${GTEST_LIBRARIES} pthread)
 
 endif()
