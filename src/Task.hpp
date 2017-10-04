@@ -1,5 +1,6 @@
-#ifndef ABSTRACT_TASK_HPP
-#define ABSTRACT_TASK_HPP
+#pragma once
+
+#define FINISH_TASK_FLAG *state = 1;
 
 using namespace std;
 
@@ -11,12 +12,12 @@ namespace TP {
 class Task
 {
   public:
-    Task(){};
+    Task():state(0){};
     virtual ~Task(){};
     virtual int id() = 0;
-    virtual bool executeTask() = 0;
+    virtual void executeTask() = 0;
+
+    int* state;
 };
 
 } // namespace TP
-
-#endif

@@ -1,5 +1,4 @@
-#ifndef _TASK1_HPP
-#define _TASK1_HPP
+#pragma once
 
 #include <ThreadPool/Task.hpp>
 
@@ -12,11 +11,9 @@ class Task1 : public TP::Task
     Task1(int id, int maxLoop);
     ~Task1();
     int id();
-    bool executeTask();
+    void executeTask();
 
   private:
     int m_id;
     int m_maxLoop;
 };
-
-#endif

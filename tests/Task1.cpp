@@ -18,7 +18,7 @@ int Task1::id()
   return m_id;
 }
 
-bool Task1::executeTask()
+void Task1::executeTask()
 {
   // test loop
   int localCounter = 0;
@@ -26,5 +26,6 @@ bool Task1::executeTask()
     localCounter++;
     std::this_thread::sleep_for(std::chrono::milliseconds(200));
   }
-  return true;
+
+  FINISH_TASK_FLAG // You have to Call this define to send finish information flag
 }

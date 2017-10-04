@@ -1,16 +1,15 @@
-#ifndef THREAD_POOL_HPP
-#define THREAD_POOL_HPP
+#pragma once
 
 // Std
 #include <thread>
-#include <future>
+#include <mutex>
 #include <vector>
 #include <queue>
 #include <cassert>
 
-using namespace std;
-
 #include "Task.hpp"
+
+using namespace std;
 
 namespace TP {
 
@@ -20,178 +19,187 @@ enum ThreadState
   Finish
 };
 
+mutex myMutex;
+
 /**
- * @brief Threadpool follow the threadpool pattern design
+ * @brief Threadpool follow the thread pool pattern design
+ * 
  * @details Create multi thread slot. Task are loaded in thread slot.
  * If there is to much task compared to the number of thread slot,
  * task are saved in a queue for waiting empty slot.
+ * A event loop is created to manage the thread pool.
+ * 
+ * @nwarning Beware, ThreadPool class is not a singleton. 
+ * You have to make sure you create only one instance in your program.
  */
-template <size_t T>
+template <size_t NbThread, typename TaskType>
 class ThreadPool
 {
   public:
-    explicit ThreadPool();
 
-    // Non-copyable
+    explicit ThreadPool();
+    ~ThreadPool();
+
+    void addTask(TaskType& task);
+    int nbRunningTask() const ;
+    bool eventLoopIsActive() const ;
+
     ThreadPool (const ThreadPool &) = delete;
     ThreadPool & operator = (const ThreadPool &) = delete;
 
-    ~ThreadPool();
-
-    void addThread(TP::Task& task);
-    int nbRunningThread();
+    ThreadPool(ThreadPool&& other) = delete;
+    ThreadPool& operator=(ThreadPool&& other) = delete;
 
   private:
-    int m_nbThread; // Number of thread
-    bool m_createEventLoop; // Authorizes event loop creation
 
-    vector<future<bool> > m_threads; // Threadpool core
-    vector<ThreadState > m_threadStates; // Each thread state are saved Finish/Running
+    std::thread m_threads[NbThread]; // Threadpool core
+    int m_threadStates[NbThread];    // Each thread state are saved Finish/Running
 
-    queue<TP::Task* > m_queue; // The task queue
+    queue<TaskType> m_queue; // The task queue
 
-    void eventLoop(); // Private event loop
+    bool m_createEventLoop; // even loop launch flag
+    void eventLoop();       // Private event loop
 };
 
 /**
- * @brief Create threadpool
+ * @brief Create thread pool
  *
- * @tparam T Number of thread
+ * @tparam NbThread Number of thread
+ * @tparam TaskType The type structure
  */
-template <size_t T>
-ThreadPool<T>::ThreadPool()
-  :m_nbThread(T)
+template <size_t NbThread, typename TaskType>
+ThreadPool<NbThread, TaskType>::ThreadPool()
+  : m_createEventLoop(false)
 {
-  // Thread Table
-  m_threads.resize(m_nbThread);
-
-  // State Table
-  m_threadStates.reserve(m_nbThread);
-  for (int i = 0; i < m_nbThread; ++i){
-    m_threadStates.push_back(Finish);
+  for (unsigned int i = 0; i < NbThread; ++i){
+    m_threadStates[i] = Finish;
   }
+}
 
-  // Active event loop creation
-  m_createEventLoop = true;
+/**
+ * @brief Destruct thread pool
+ * 
+ * @warning Threadpool is design with no synch thread (detach). So when a task is loaded, 
+ * you no longer the hand on it. You have to make sure that all threads are finished
+ * before the destruction.
+ */
+ template <size_t NbThread, typename TaskType>
+ThreadPool<NbThread, TaskType>::~ThreadPool()
+{
+  assert(nbRunningTask() == 0);
 }
 
 /**
  * @brief Add new task in Threadpool
- * @details Is a thread slot is available, the task is load also it is place in the queue
+ * @details If there is not thread slot available, the task is kept in backup queue
  *
  * @param task The new task
  */
-template <size_t T>
-void ThreadPool<T>::addThread(TP::Task& task)
+template <size_t NbThread, typename TaskType>
+void ThreadPool<NbThread, TaskType>::addTask(TaskType& task)
 {
+  myMutex.lock(); //----------------
+
   // Create event loop
-  if (m_createEventLoop){
+  if (!m_createEventLoop){
     thread(&ThreadPool::eventLoop, this).detach();
-    m_createEventLoop = false;
+    m_createEventLoop = true;
   }
 
-  // Add new task in a thread slot
-  int enableSlot = false;
-  for (int i = 0; i < m_nbThread; ++i)
+  bool addInQueue = true;
+
+  for (unsigned int i = 0; i < NbThread; ++i)
   {
     // If a thread is Finish
     if (m_threadStates[i] == Finish){
-
-      m_threads[i] = async(std::launch::async, &Task::executeTask, &task);
       m_threadStates[i] = Running;
-      enableSlot = true;
+      task.state        = &m_threadStates[i];
+      m_threads[i]      = thread(&TaskType::executeTask, task);
+      m_threads[i].detach();
+      addInQueue = false;
       break;
     }
   }
 
   // Add new task in queue
-  if (enableSlot == false){
-    m_queue.push(&task);
+  if (addInQueue){
+    m_queue.push(task);
   }
+
+  myMutex.unlock(); //----------------
 }
 
 /**
  * @return Active thread Number
  */
-template <size_t T>
-int ThreadPool<T>::nbRunningThread()
+template <size_t NbThread, typename TaskType>
+int ThreadPool<NbThread, TaskType>::nbRunningTask() const 
 {
-  int counter = 0;
-  for (int i = 0; i < m_nbThread; ++i)
-  {
-    if (m_threadStates[i] == Running){
-      counter++;
-    }
+  unsigned int nbTask = 0;
+  for (unsigned int i = 0; i < NbThread; ++i){
+    if (m_threadStates[i] == Running)
+      nbTask++;
   }
-  return counter;
+  return nbTask;
 }
 
 /**
- * @brief Destructor
+ * @return Event loop state
  */
- template <size_t T>
-ThreadPool<T>::~ThreadPool()
+template <size_t NbThread, typename TaskType>
+bool ThreadPool<NbThread, TaskType>::eventLoopIsActive() const 
 {
-  assert(nbRunningThread() == 0);
+  return m_createEventLoop;
 }
 
 /**
  * @brief Event loop
  * @details Used to refresh threads states and insert task in threadpool if a slot is available
  */
-template <size_t T>
-void ThreadPool<T>::eventLoop(){
+template <size_t NbThread, typename TaskType>
+void ThreadPool<NbThread, TaskType>::eventLoop(){
 
   // Forever
   for(;;){
 
-    int enableSlot = false;
-    int emptySlotNumber = 0;
+    unsigned int emptySlotNumber = 0;
 
     // Check threads states
-    for (int i = 0; i < m_nbThread; ++i)
-    {
-      if (m_threadStates[i] == Running){
+    bool lockOK = myMutex.try_lock(); //----------------
+    if (lockOK){
 
-        std::future_status status = m_threads[i].wait_for(std::chrono::milliseconds(0));
+      for (unsigned int i = 0; i < NbThread; ++i){
 
-        if (status == std::future_status::ready){
-          m_threadStates[i] = Finish;
-          enableSlot = true;
-        }
-      }
-      else{
-        enableSlot = true;
-        emptySlotNumber++;
-      }
-    }
+        if (m_threadStates[i] == Finish){
 
-    // Insert task in the queue, if a slot is available
-    if ((m_queue.size() > 0) && (enableSlot)){
-
-      for (unsigned int i = 0; i < m_queue.size(); ++i)
-      {
-        for (int j = 0; j < m_nbThread; ++j)
-        {
-          if (m_threadStates[i] == Finish){
-
-            m_threads[i] = async(std::launch::async, &Task::executeTask, m_queue.front());
+          // Create new task
+          if (!m_queue.empty()){
+            TaskType & tmp    = m_queue.front();
             m_threadStates[i] = Running;
+            tmp.state         = &m_threadStates[i];
+            m_threads[i]      = thread(&TaskType::executeTask, tmp);
+            m_threads[i].detach();
             m_queue.pop();
             break;
           }
+          // increment empty slot number
+          else{
+            emptySlotNumber++;
+          }
         }
       }
-    }
 
-    // Stop loop
-    if ((m_queue.size() == 0) && (emptySlotNumber == m_nbThread)){
-       m_createEventLoop = true;
-      break;
-    }
-  }
+      // Stop loop if empty slot == number of slot
+      if (emptySlotNumber == NbThread){
+        m_createEventLoop = false;
+        myMutex.unlock(); //----------------
+        return;
+      }
+      
+      myMutex.unlock(); //----------------
+    } // lockOK
+
+  }// for(;;)
 }
 
 } // namespace TP
-
-#endif

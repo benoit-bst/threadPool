@@ -10,19 +10,19 @@ using namespace TP;
 /*
   Tests ThreadPool with dynamic and static allocation.
 
-  1.  We create 8 Task for a thread pool of 4. 
+  1.  We create 7 Task for a thread pool of 4.
       Each task wait 400 ms.
-      We test thread loading and the waiting queue with 8 tasks.
-     
+      We test thread loading and the waiting queue with 7 tasks.
+
   2.  We wait until all the tasks have finished to test the main loop.
-     
+
   3.  When it's finish we reload 6 tasks to test thread loading and 
       the waiting queue
 */
 
 TEST(ThreadPoolTests, dynamicAllocation){
 
-  ThreadPool<NB_THREAD> *threadPool = new ThreadPool<NB_THREAD>();
+  ThreadPool<NB_THREAD, Task1> *threadPool = new ThreadPool<NB_THREAD, Task1>;
 
   Task1 task1(0,2);
   Task1 task2(1,2);
@@ -32,16 +32,25 @@ TEST(ThreadPoolTests, dynamicAllocation){
   Task1 task6(5,2);
   Task1 task7(6,2);
 
-  threadPool->addThread(task1);
-  threadPool->addThread(task2);
-  threadPool->addThread(task3);
-  threadPool->addThread(task4);
-  threadPool->addThread(task5);
-  threadPool->addThread(task6);
-  threadPool->addThread(task7);
+  threadPool->addTask(task1);
+  ASSERT_EQ(threadPool->nbRunningTask(), 1);
+  threadPool->addTask(task2);
+  ASSERT_EQ(threadPool->nbRunningTask(), 2);
+  threadPool->addTask(task3);
+  ASSERT_EQ(threadPool->nbRunningTask(), 3);
+  threadPool->addTask(task4);
+  ASSERT_EQ(threadPool->nbRunningTask(), 4);
+  threadPool->addTask(task5);
+  ASSERT_EQ(threadPool->nbRunningTask(), 4); // NB_THREAD == 4
+  threadPool->addTask(task6);
+  threadPool->addTask(task7);
 
-  while (threadPool->nbRunningThread() > 0)
+  ASSERT_EQ(threadPool->eventLoopIsActive(), true);
+
+  while (threadPool->nbRunningTask() > 0)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  ASSERT_EQ(threadPool->eventLoopIsActive(), false);
 
   Task1 task8(7,2);
   Task1 task9(8,2);
@@ -50,20 +59,31 @@ TEST(ThreadPoolTests, dynamicAllocation){
   Task1 task12(11,2);
   Task1 task13(12,2);
 
-  threadPool->addThread(task8);
-  threadPool->addThread(task9);
-  threadPool->addThread(task10);
-  threadPool->addThread(task11);
-  threadPool->addThread(task12);
-  threadPool->addThread(task13);
+  threadPool->addTask(task8);
+  ASSERT_EQ(threadPool->nbRunningTask(), 1);
+  threadPool->addTask(task9);
+  ASSERT_EQ(threadPool->nbRunningTask(), 2);
+  threadPool->addTask(task10);
+  ASSERT_EQ(threadPool->nbRunningTask(), 3);
+  threadPool->addTask(task11);
+  ASSERT_EQ(threadPool->nbRunningTask(), 4);
+  threadPool->addTask(task12);
+  ASSERT_EQ(threadPool->nbRunningTask(), 4); // NB_THREAD == 4
+  threadPool->addTask(task13);
 
-  while (threadPool->nbRunningThread() > 0)
+  ASSERT_EQ(threadPool->eventLoopIsActive(), true);
+
+  while (threadPool->nbRunningTask() > 0)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  ASSERT_EQ(threadPool->eventLoopIsActive(), false);
+
+  delete threadPool;
 }
 
 TEST(ThreadPoolTests, staticAllocation){
 
-  ThreadPool<NB_THREAD> threadPool;
+  ThreadPool<NB_THREAD, Task1> threadPool;
 
   Task1 task1(0,2);
   Task1 task2(1,2);
@@ -73,16 +93,25 @@ TEST(ThreadPoolTests, staticAllocation){
   Task1 task6(5,2);
   Task1 task7(6,2);
 
-  threadPool.addThread(task1);
-  threadPool.addThread(task2);
-  threadPool.addThread(task3);
-  threadPool.addThread(task4);
-  threadPool.addThread(task5);
-  threadPool.addThread(task6);
-  threadPool.addThread(task7);
+  threadPool.addTask(task1);
+  ASSERT_EQ(threadPool.nbRunningTask(), 1);
+  threadPool.addTask(task2);
+  ASSERT_EQ(threadPool.nbRunningTask(), 2);
+  threadPool.addTask(task3);
+  ASSERT_EQ(threadPool.nbRunningTask(), 3);
+  threadPool.addTask(task4);
+  ASSERT_EQ(threadPool.nbRunningTask(), 4);
+  threadPool.addTask(task5);
+  ASSERT_EQ(threadPool.nbRunningTask(), 4); // NB_THREAD == 4
+  threadPool.addTask(task6);
+  threadPool.addTask(task7);
 
-  while (threadPool.nbRunningThread() > 0)
+  ASSERT_EQ(threadPool.eventLoopIsActive(), true);
+
+  while (threadPool.nbRunningTask() > 0)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  ASSERT_EQ(threadPool.eventLoopIsActive(), false);
 
   Task1 task8(7,2);
   Task1 task9(8,2);
@@ -91,15 +120,24 @@ TEST(ThreadPoolTests, staticAllocation){
   Task1 task12(11,2);
   Task1 task13(12,2);
 
-  threadPool.addThread(task8);
-  threadPool.addThread(task9);
-  threadPool.addThread(task10);
-  threadPool.addThread(task11);
-  threadPool.addThread(task12);
-  threadPool.addThread(task13);
+  threadPool.addTask(task8);
+  ASSERT_EQ(threadPool.nbRunningTask(), 1);
+  threadPool.addTask(task9);
+  ASSERT_EQ(threadPool.nbRunningTask(), 2);
+  threadPool.addTask(task10);
+  ASSERT_EQ(threadPool.nbRunningTask(), 3);
+  threadPool.addTask(task11);
+  ASSERT_EQ(threadPool.nbRunningTask(), 4);
+  threadPool.addTask(task12);
+  ASSERT_EQ(threadPool.nbRunningTask(), 4); // NB_THREAD == 4
+  threadPool.addTask(task13);
 
-  while (threadPool.nbRunningThread() > 0)
+  ASSERT_EQ(threadPool.eventLoopIsActive(), true);
+
+  while (threadPool.nbRunningTask() > 0)
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  ASSERT_EQ(threadPool.eventLoopIsActive(), false);
 }
 
 int main(int argc, char **argv){
