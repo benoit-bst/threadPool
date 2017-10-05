@@ -2,13 +2,15 @@
 
 #include "Task1.hpp"
 #include <ThreadPool/ThreadPool.hpp>
+#include <random>
 
 #define NB_THREAD 4
+#define NB_TASK 25
 
 using namespace TP;
 
 /*
-  Tests ThreadPool with dynamic and static allocation.
+  Tests ThreadPool with dynamic allocation.
 
   1.  We create 7 Task for a thread pool of 4.
       Each task wait 400 ms.
@@ -19,7 +21,6 @@ using namespace TP;
   3.  When it's finish we reload 6 tasks to test thread loading and 
       the waiting queue
 */
-
 TEST(ThreadPoolTests, dynamicAllocation){
 
   ThreadPool<NB_THREAD, Task1> *threadPool = new ThreadPool<NB_THREAD, Task1>;
@@ -81,6 +82,18 @@ TEST(ThreadPoolTests, dynamicAllocation){
   delete threadPool;
 }
 
+/*
+  Tests ThreadPool with static allocation.
+
+  1.  We create 7 Task for a thread pool of 4.
+      Each task wait 400 ms.
+      We test thread loading and the waiting queue with 7 tasks.
+
+  2.  We wait until all the tasks have finished to test the main loop.
+
+  3.  When it's finish we reload 6 tasks to test thread loading and 
+      the waiting queue
+*/
 TEST(ThreadPoolTests, staticAllocation){
 
   ThreadPool<NB_THREAD, Task1> threadPool;
@@ -138,6 +151,39 @@ TEST(ThreadPoolTests, staticAllocation){
     std::this_thread::sleep_for(std::chrono::milliseconds(100));
 
   ASSERT_EQ(threadPool.eventLoopIsActive(), false);
+}
+
+/*
+  Tests ThreadPool with with tasks random loop time
+*/
+TEST(ThreadPoolTests, randomTask){
+
+  // Random
+  random_device rd;
+  mt19937 eng(rd());
+  uniform_int_distribution<> distr(0,20);
+
+  ThreadPool<NB_THREAD, Task1> threadPool;
+
+  // Create tasks with random loop time
+  vector<Task1> tasks;
+  for (unsigned int i = 0; i < NB_TASK; ++i){
+    tasks.push_back(Task1(i,distr(eng)));
+  }
+
+  // Add tasks
+  for (unsigned int i = 0; i < tasks.size(); ++i){
+    threadPool.addTask(tasks[i]);
+  }
+
+  ASSERT_EQ(threadPool.nbRunningTask(), 4); // NB_THREAD == 4
+  ASSERT_EQ(threadPool.eventLoopIsActive(), true);
+
+  while (threadPool.nbRunningTask() > 0)
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+
+  ASSERT_EQ(threadPool.eventLoopIsActive(), false);
+
 }
 
 int main(int argc, char **argv){
