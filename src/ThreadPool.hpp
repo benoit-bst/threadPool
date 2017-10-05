@@ -57,7 +57,7 @@ class ThreadPool
 
     queue<TaskType> m_queue; // The task queue
 
-    bool m_createEventLoop; // even loop launch flag
+    bool m_createEventLoop; // Even loop launch flag
     void eventLoop();       // Private event loop
 };
 
