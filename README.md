@@ -5,6 +5,8 @@ Threadpool Class follows the threadpool pattern design :
 - Task are loaded in thread slot.
 - If there is to much task compared to the number of thread slot, task are saved in a queue for waiting empty slot.
 
+Using of C++11 std::thread
+
 ## Examples
 
 See tests in /tests
@@ -15,11 +17,10 @@ Required tools et library :
 
 * CMake >= 3.5.1
 * gcc >= 5.4.0
-* libgtest-dev >= 1.7.0
 
 debian installation :
 ```shell
-$ sudo apt-get install cmake gcc libgtest-dev
+$ sudo apt-get install cmake gcc
 ```
 
 ## Source recovery
