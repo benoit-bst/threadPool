@@ -156,7 +156,7 @@ TEST(ThreadPoolTests, staticAllocation){
 /*
   Tests ThreadPool with with tasks random loop time
 */
-TEST(ThreadPoolTests, randomTask){
+TEST(ThreadPoolTests, randomTasks){
 
   // Random
   random_device rd;
