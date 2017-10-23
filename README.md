@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/benoit-bst/threadPool.svg?branch=master)](https://travis-ci.org/benoit-bst/threadPool)
+
 # Introduction
 
 Threadpool Class follows the threadpool pattern design :
