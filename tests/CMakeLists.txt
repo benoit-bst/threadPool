@@ -17,8 +17,8 @@ if(ENABLE_TESTING)
   # target_link_libraries(ThreadPoolTests gtest pthread)
 
   if (COVERAGE)
-    target_compile_options(tests PRIVATE --coverage)
-    target_link_libraries(tests PRIVATE --coverage)
+    target_compile_options(ThreadPoolTests PRIVATE --coverage)
+    target_link_libraries(ThreadPoolTests PRIVATE --coverage)
   endif()
 
 endif()
