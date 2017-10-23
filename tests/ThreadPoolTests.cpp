@@ -32,6 +32,7 @@ TEST(ThreadPoolTests, dynamicAllocation){
   Task1 task5(4,2);
   Task1 task6(5,2);
   Task1 task7(6,2);
+  int id = task7.id();
 
   threadPool->addTask(task1);
   ASSERT_EQ(threadPool->nbRunningTask(), 1);
