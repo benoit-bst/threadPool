@@ -2,6 +2,8 @@ if(ENABLE_TESTING)
 
   MESSAGE("-- [Threadpool] - Compile tests")
   
+  set(COVERAGE OFF CACHE BOOL "Coverage")
+
   include(gtest.cmake)
   find_package (Threads)
 
@@ -13,5 +15,10 @@ if(ENABLE_TESTING)
   add_executable(ThreadPoolTests ${Sources})
   target_link_libraries(ThreadPoolTests PRIVATE gtest ${CMAKE_THREAD_LIBS_INIT})
   # target_link_libraries(ThreadPoolTests gtest pthread)
+
+  if (COVERAGE)
+    target_compile_options(tests PRIVATE --coverage)
+    target_link_libraries(tests PRIVATE --coverage)
+  endif()
 
 endif()
