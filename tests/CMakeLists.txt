@@ -1,24 +1,22 @@
 if(ENABLE_TESTING)
 
-  MESSAGE("-- [Threadpool] - Compile tests")
-  
-  set(COVERAGE OFF CACHE BOOL "Coverage")
+  MESSAGE(STATUS  "[Threadpool] Compile tests")
 
+  # Add google test
   include(gtest.cmake)
   find_package (Threads)
 
-  SET(Sources
-  ThreadPoolTests.cpp
-  Task1.cpp
+  set(Sources
+    ThreadPoolTests.cc
+    Task1.cc
   )
 
+  # ThreadPool tests
   add_executable(ThreadPoolTests ${Sources})
   target_link_libraries(ThreadPoolTests PRIVATE gtest ${CMAKE_THREAD_LIBS_INIT})
-  # target_link_libraries(ThreadPoolTests gtest pthread)
 
-  if (COVERAGE)
-    target_compile_options(ThreadPoolTests PRIVATE --coverage)
-    target_link_libraries(ThreadPoolTests PRIVATE --coverage)
-  endif()
+  # tests compilation Flags
+  set(THREADPOOL_TEST_FLAGS "-O3 -std=c++11 -Wall -Wextra")
+  set_target_properties( ThreadPoolTests PROPERTIES COMPILE_FLAGS ${THREADPOOL_TEST_FLAGS})
 
 endif()
