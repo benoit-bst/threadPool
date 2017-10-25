@@ -1,5 +1,5 @@
 [![Build Status](https://travis-ci.org/benoit-bst/threadPool.svg?branch=master)](https://travis-ci.org/benoit-bst/threadPool)
-[![Coverage Status](https://coveralls.io/repos/github/benoit-bst/threadPool/badge.svg)](https://coveralls.io/github/benoit-bst/threadPool)
+[![Coverage Status](https://coveralls.io/repos/github/benoit-bst/threadPool/badge.svg?branch=master)](https://coveralls.io/github/benoit-bst/threadPool?branch=master)
 
 # Introduction
 
