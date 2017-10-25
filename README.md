@@ -1,3 +1,6 @@
+[![Build Status](https://travis-ci.org/benoit-bst/threadPool.svg?branch=master)](https://travis-ci.org/benoit-bst/threadPool)
+[![Coverage Status](https://coveralls.io/repos/github/benoit-bst/threadPool/badge.svg)](https://coveralls.io/github/benoit-bst/threadPool)
+
 # Introduction
 
 Threadpool Class follows the threadpool pattern design :
@@ -20,6 +23,8 @@ Using of **C++11 std::thread**.
 
   #include <ThreadPool/ThreadPool.h>
   #include "PersonalTask.h"
+
+  using namespace TP;
 
   ThreadPool<NB_THREAD, PersonalTask> threadPool;
 
