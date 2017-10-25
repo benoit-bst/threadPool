@@ -17,7 +17,7 @@ using namespace TP;
 
   2.  We wait until all the tasks are finished.
 
-  3.  When it's finish we reload 6 tasks to test thread loading and 
+  3.  When it's finish we reload 6 tasks to test thread loading and
       the waiting queue
 */
 TEST(ThreadPoolTests, dynamicAllocation){
@@ -29,6 +29,7 @@ TEST(ThreadPoolTests, dynamicAllocation){
   Task1 task5(4,2);
   Task1 task6(5,2);
   Task1 task7(6,2);
+  task3.id();
 
   threadPool->submit(Task1(0,2));
   threadPool->submit(Task1(1,2));
@@ -68,7 +69,7 @@ TEST(ThreadPoolTests, dynamicAllocation){
 
   2.  We wait until all the tasks have finished
 
-  3.  When it's finish we reload 6 tasks to test thread loading and 
+  3.  When it's finish we reload 6 tasks to test thread loading and
       the waiting queue
 */
 TEST(ThreadPoolTests, staticAllocation){
